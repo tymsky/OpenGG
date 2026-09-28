@@ -1,0 +1,16 @@
+<Project Sdk="Godot.NET.Sdk/4.7.1">
+  <!-- The Godot game: rendering, input, UI and sound. Rules and content live in OpenGG.Core. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>OpenGG</RootNamespace>
+    <AssemblyName>OpenGG</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\core\OpenGG.Core\OpenGG.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The original's look, applied to the player's own copy of the game (read in memory). -->
+    <EmbeddedResource Include="Skins\original.json" LogicalName="OpenGG.Skins.original.json" />
+  </ItemGroup>
+</Project>

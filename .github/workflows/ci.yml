@@ -1,0 +1,54 @@
+# Checks every pull request and every push to main: the generator, the placeholder pack, the core tests and the game's
+# build (no export: that is release.yml's).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Nothing of the original
+        shell: bash
+        run: |
+          # The clean-room rule (CONTRIBUTING.md): none of the original game's data files in the repository.
+          if git ls-files | grep -i -E '\.(car|jpk|dpk|mek|dat|3ds|tga)$'; then
+            echo "::error::Files of the kinds the original game is made of are in the repository."
+            exit 1
+          fi
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "8.0.x"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Generator and placeholder pack
+        run: |
+          npm ci
+          npm run typecheck
+          npm run gen:assets
+
+      - name: Tests
+        run: dotnet test core/OpenGG.Core.Tests --configuration Release
+
+      - name: Game build
+        run: dotnet build game/OpenGG.csproj --configuration Release

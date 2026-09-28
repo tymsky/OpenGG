@@ -1,0 +1,19 @@
+node_modules/
+build/
+*.log
+
+# The placeholder pack is generated (npm run gen:assets).
+data/ai/
+
+# Original game files must never be committed or redistributed: OpenGG reads them from the player's own copy.
+/original/
+/original-game/
+/game-data/
+
+# .NET / Godot build output
+bin/
+obj/
+game/.godot/
+# Godot's per-script ids, made again on import.
+*.uid
+*.user

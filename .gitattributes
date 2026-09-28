@@ -1,0 +1,10 @@
+# Keep LF line endings in the working tree on every platform (Godot, Node and .NET all handle LF).
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.glb binary
+*.wav binary
+*.ogg binary
+*.ttf binary
+*.otf binary

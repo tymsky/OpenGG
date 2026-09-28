@@ -1,0 +1,9 @@
+<Project>
+  <!-- Shared by every C# project in the repo (core library, tests, Godot game). -->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+    <Authors>OpenGG contributors</Authors>
+    <Product>OpenGG</Product>
+  </PropertyGroup>
+</Project>

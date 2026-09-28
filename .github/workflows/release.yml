@@ -1,0 +1,107 @@
+# Builds OpenGG for Windows and, for a pushed tag, attaches the package to a GitHub release. The version is
+# config/version in game/project.godot (semantic versioning); a release's tag is "v" + it (v0.1.0, v0.2.0-rc.1, ...),
+# and a tag with a pre-release part (after a hyphen) makes a pre-release. Run it by hand (Actions > Build and release >
+# Run workflow) to get the package as a build artifact only.
+name: Build and release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: "4.7.1"
+  GODOT_STATUS: "stable"
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Version
+        shell: pwsh
+        run: |
+          $m = Select-String -Path game/project.godot -Pattern '^config/version="([^"]+)"'
+          if (-not $m) { throw "game/project.godot has no config/version" }
+          $v = $m.Matches[0].Groups[1].Value
+          if ($v -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw "config/version $v is not MAJOR.MINOR.PATCH[-PRE]" }
+          if ($env:GITHUB_REF_TYPE -eq "tag" -and $env:GITHUB_REF_NAME -ne "v$v") {
+            throw "The tag $env:GITHUB_REF_NAME does not match config/version $v (it should be v$v)"
+          }
+          "VERSION=$v" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "8.0.x"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Placeholder pack (data/ai)
+        run: |
+          npm ci
+          npm run gen:assets
+
+      - name: Tests
+        run: dotnet test core/OpenGG.Core.Tests --configuration Release
+
+      - name: Godot .NET and its export templates
+        shell: pwsh
+        run: |
+          $v = "$env:GODOT_VERSION-$env:GODOT_STATUS"
+          $base = "https://github.com/godotengine/godot-builds/releases/download/$v"
+          Invoke-WebRequest "$base/Godot_v${v}_mono_win64.zip" -OutFile "$env:RUNNER_TEMP\godot.zip"
+          Expand-Archive "$env:RUNNER_TEMP\godot.zip" -DestinationPath "$env:RUNNER_TEMP\godot"
+          Invoke-WebRequest "$base/Godot_v${v}_mono_export_templates.tpz" -OutFile "$env:RUNNER_TEMP\templates.zip"
+          Expand-Archive "$env:RUNNER_TEMP\templates.zip" -DestinationPath "$env:RUNNER_TEMP\templates"
+          $dest = "$env:APPDATA\Godot\export_templates\$env:GODOT_VERSION.$env:GODOT_STATUS.mono"
+          New-Item -ItemType Directory -Force $dest | Out-Null
+          Copy-Item "$env:RUNNER_TEMP\templates\templates\*" $dest -Recurse -Force
+          $exe = Get-ChildItem "$env:RUNNER_TEMP\godot" -Recurse -Filter "*_console.exe" | Select-Object -First 1
+          "GODOT=$($exe.FullName)" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
+      - name: Export
+        shell: pwsh
+        run: |
+          $out = Join-Path $PWD "build\OpenGG"
+          New-Item -ItemType Directory -Force $out | Out-Null
+          # The first run imports the project (there is no .godot folder in a fresh checkout).
+          & $env:GODOT --headless --path game --import
+          & $env:GODOT --headless --path game --export-release "Windows Desktop" (Join-Path $out "OpenGG.exe")
+          if (-not (Test-Path (Join-Path $out "OpenGG.exe"))) { throw "The export did not produce OpenGG.exe" }
+          New-Item -ItemType Directory -Force (Join-Path $out "data") | Out-Null
+          Copy-Item data\ai (Join-Path $out "data\ai") -Recurse
+          Copy-Item data\hd (Join-Path $out "data\hd") -Recurse
+          Copy-Item LICENSE, README.md, CHANGELOG.md $out
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $name = if ($env:GITHUB_REF_TYPE -eq "tag") { $env:VERSION } else { "$env:VERSION-dev-$($env:GITHUB_SHA.Substring(0, 7))" }
+          $zip = "OpenGG-$name-windows-x64.zip"
+          # 7-Zip (on GitHub's Windows runners) writes the paths with forward slashes, as zip tools expect.
+          7z a -tzip $zip build/OpenGG
+          if ($LASTEXITCODE -ne 0) { throw "7z failed" }
+          "ZIP=$zip" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
+      - name: Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v3
+        with:
+          files: ${{ env.ZIP }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
+
+      - name: Artifact
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v7
+        with:
+          name: OpenGG-windows-x64
+          path: ${{ env.ZIP }}

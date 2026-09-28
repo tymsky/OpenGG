@@ -1,0 +1,53 @@
+name: Bug report
+description: Something in OpenGG does not work.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Sign in as a new mechanic\n2. ..."
+  - type: input
+    id: version
+    attributes:
+      label: OpenGG version
+      description: On the sign-in sheet's BETA stamp, or in the window's title.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: content
+    attributes:
+      label: Content and look
+      options:
+        - The original's content and look
+        - The original's content, OpenGG's look
+        - The placeholders (no original)
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 24H2"
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: "Drag %APPDATA%\\Godot\\app_userdata\\OpenGG\\logs\\godot.log here, and a screenshot or your save if it helps."
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: Before you send it
+      options:
+        - label: I searched the issues for the same problem.
+          required: true
+        - label: I attached no files of the original game (its Data folder, .car, .dat or .mek files).
+          required: true

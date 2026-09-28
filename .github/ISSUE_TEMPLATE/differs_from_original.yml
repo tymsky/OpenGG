@@ -1,0 +1,41 @@
+name: Differs from the original
+description: OpenGG does something the original does differently.
+labels: [fidelity]
+body:
+  - type: textarea
+    id: original
+    attributes:
+      label: What the original does
+      description: And how you know it. A video or a screenshot of the running original is the best evidence.
+    validations:
+      required: true
+  - type: textarea
+    id: opengg
+    attributes:
+      label: What OpenGG does
+    validations:
+      required: true
+  - type: dropdown
+    id: release
+    attributes:
+      label: The original's release
+      options:
+        - "2002"
+        - "1999"
+        - Not sure
+  - type: input
+    id: version
+    attributes:
+      label: OpenGG version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: Before you send it
+      options:
+        - label: I checked docs/FIDELITY.md (it may be a known difference on purpose).
+          required: true
+        - label: This comes from playing the original, not from decompiling it, and I attached none of its files.
+          required: true
