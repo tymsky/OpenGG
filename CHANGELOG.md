@@ -4,10 +4,12 @@ Versions follow [Semantic Versioning](https://semver.org): **MAJOR** when saves 
 working, **MINOR** for new features and changes to how the game plays, **PATCH** for fixes only. While the version is
 0.x (the beta), a MINOR release may still break saves, and its notes say so.
 
-## Unreleased
+## 0.2.0
+
+Windows and Linux. Saves of 0.1.0 keep working.
 
 - A Linux build (x86-64), in the release next to the Windows one; so far tested only without a graphics card
-  (software OpenGL).
+  (software Vulkan and OpenGL).
 - OpenGG's own look letters in bundled open fonts (Anton, Archivo Black, Open Sans, a narrowed Barlow Condensed)
   instead of Windows' own, so it looks the same everywhere; the widths match, so the lettering fits as before.
 - The original's look draws its 3D right on Godot's Compatibility renderer (OpenGL, used where there is no Vulkan or
