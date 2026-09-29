@@ -39,45 +39,37 @@ public static class Look
 
     public static Font Condensed { get; private set; } = null!;
     public static Font CondensedBold { get; private set; } = null!;
-    // (FontVariation over a SystemFont; see Narrow.)
     public static Font Heavy { get; private set; } = null!;
     public static Font Impact { get; private set; } = null!;
     public static Font Plain { get; private set; } = null!;
 
     static bool fontsReady;
 
+    /// <summary>The fonts in game/Fonts (OFL, see its LICENSES.md), the same on every system; each stands in for the
+    /// Windows font named (their widths within a few per cent of it, so the lettering fits as it did).</summary>
     public static void LoadFonts()
     {
         if (fontsReady) return;
         fontsReady = true;
-        Condensed = Narrow(600);
-        CondensedBold = Narrow(700);
-        Heavy = Font(900, 100, "Arial Black", "Impact", "Arial");
-        Impact = Font(400, 100, "Impact", "Arial Black", "Arial");
-        Plain = Font(700, 100, "Tahoma", "Verdana", "Arial");
+        Condensed = Font("OpenGGNarrow-SemiBold");  // Bahnschrift, condensed
+        CondensedBold = Font("OpenGGNarrow-Bold");
+        Heavy = Font("ArchivoBlack-Regular");  // Arial Black
+        Impact = Font("Anton-Regular");  // Impact
+        var ts = TextServerManager.Singleton.GetPrimaryInterface();
+        Plain = new FontVariation  // Tahoma bold
+        {
+            BaseFont = Font("OpenSans-Variable"),
+            VariationOpentype = new Godot.Collections.Dictionary { [ts.NameToTag("wght")] = 700, [ts.NameToTag("wdth")] = 100 },
+        };
     }
 
-    /// <summary>A bold condensed face like the original's lettering: Bahnschrift's condensed width where it
-    /// exists (a variable font), else a narrow system font.</summary>
-    static Font Narrow(int weight)
+    static FontFile Font(string file)
     {
-        var baseFont = Font(weight, 75, "Bahnschrift", "Arial Narrow", "Tahoma", "Arial");
-        var v = new FontVariation { BaseFont = baseFont };
-        var axes = new Godot.Collections.Dictionary();
-        axes["wdth"] = 75.0f;
-        axes["wght"] = (float)weight;
-        v.VariationOpentype = axes;
-        return v;
+        var f = GD.Load<FontFile>($"res://Fonts/{file}.ttf");
+        f.Antialiasing = TextServer.FontAntialiasing.Gray;
+        f.Hinting = TextServer.Hinting.Light;
+        return f;
     }
-
-    static SystemFont Font(int weight, int stretch, params string[] names) => new()
-    {
-        FontNames = names,
-        FontWeight = weight,
-        FontStretch = stretch,
-        Antialiasing = TextServer.FontAntialiasing.Gray,
-        Hinting = TextServer.Hinting.Light,
-    };
 
     // ---- textures --------------------------------------------------------------------------------------
 

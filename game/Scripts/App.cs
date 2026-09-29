@@ -289,6 +289,7 @@ public partial class App : Control
 
         // WorkShop furniture that never moves.
         workshopUi = Put(gameRoot, new Control { MouseFilter = MouseFilterEnum.Ignore }, L.R(0, 0, 640, 480));
+        Put(workshopUi, new TabStrip(), L.TabStrip);
         for (int i = 0; i < 4; i++)
         {
             int k = i;

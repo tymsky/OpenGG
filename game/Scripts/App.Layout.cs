@@ -16,6 +16,7 @@ public static class L
     public static readonly Rect2 Money = R(514, 44, 126, 38);
 
     // ---- WorkShop ----------------------------------------------------------------------------------------
+    public static readonly Rect2 TabStrip = R(0, 41, 508, 39);
     public static readonly Rect2[] Tabs = [R(4, 45, 121, 33), R(140, 45, 90, 33), R(245, 45, 71, 33), R(331, 45, 174, 33)];
     public static readonly Rect2 View = R(5, 85, 380, 257);
     public static readonly Rect2 ViewHint = R(4, 3, 240, 16);

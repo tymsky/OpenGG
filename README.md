@@ -1,11 +1,16 @@
 # OpenGG
 
+[![Release](https://img.shields.io/github/v/release/tymsky/OpenGG?include_prereleases)](https://github.com/tymsky/OpenGG/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/tymsky/OpenGG/total)](https://github.com/tymsky/OpenGG/releases)
+[![CI](https://github.com/tymsky/OpenGG/actions/workflows/ci.yml/badge.svg)](https://github.com/tymsky/OpenGG/actions/workflows/ci.yml)
+[![Licence: GPL-3.0](https://img.shields.io/github/license/tymsky/OpenGG)](LICENSE)
+
 An open-source engine for **Gearhead Garage: The Virtual Mechanic** (1999), in the spirit of OpenTTD, OpenRCT2 and
 OpenMW. It plays the original game with **your own copy** of it: cars, jobs, decals, screens, sounds and 3D scenes are
 read from your game folder at every start, and nothing is copied out of it.
 
-**Beta, Windows** ([changes](CHANGELOG.md)). Rules, prices, screens, sounds and views follow the original as measured
-in the running game ([docs/FIDELITY.md](docs/FIDELITY.md)). Expect rough edges.
+**Beta, Windows and Linux** ([changes](CHANGELOG.md)). Rules, prices, screens, sounds and views follow the original
+as measured in the running game ([docs/FIDELITY.md](docs/FIDELITY.md)). Expect rough edges.
 
 ## Playing
 
@@ -13,6 +18,7 @@ in the running game ([docs/FIDELITY.md](docs/FIDELITY.md)). Expect rough edges.
    The program is not signed, so Windows may warn about an unknown publisher: **More info → Run anyway** (or
    [build it yourself](#building-from-source)). Windows 11 with Smart App Control turned on blocks unsigned programs
    outright, your own build too: there OpenGG will not run until it is signed.
+   On Linux (x86-64): unpack `OpenGG-…-linux-x64.tar.gz` and start `OpenGG.x86_64`.
 2. On the sign-in sheet press **GAME FOLDER…** and pick your Gearhead Garage folder, the one with `Data\Cars`.
 3. Create a mechanic with **NEW**, or bring your `.mek` saves over with **IMPORT MECHANICS** (cash, skill, cars,
    Parts Bin, decals).
@@ -23,7 +29,8 @@ its own.
 ### The game folder
 
 - Usually `C:\Program Files (x86)\HeadGames\Gearhead Garage` (only the CD? install the game first). Its `Data` folder,
-  or the folder above the game (`HeadGames`), works too; a folder without the game is refused with a message.
+  or the folder above the game (`HeadGames`), works too; on Linux, a copy of the installed folder (from Windows or a
+  Wine prefix); a folder without the game is refused with a message.
 - It is remembered and only read: nothing is written there.
 - A line on the sign-in sheet says what is missing: blue while no folder is picked; red when the folder has gone (the
   placeholders play until you pick it again) or has no archives (`Data\*.dat`: its cars and jobs then play in
@@ -48,7 +55,8 @@ OpenGG does differently. Those marked * are OpenGG's own.
 | Full screen or a window* | **F11**, **Alt+Enter**, or **SCREEN** on the sign-in sheet |
 
 The original's 640 × 480 screens are scaled at 4:3; **SCALE** on the sign-in sheet keeps them at whole multiples.
-Saves and settings live in `%APPDATA%\Godot\app_userdata\OpenGG`.
+Saves and settings live in `%APPDATA%\Godot\app_userdata\OpenGG` (on Linux
+`~/.local/share/godot/app_userdata/OpenGG`).
 
 ## Assets
 
@@ -57,7 +65,8 @@ sounds, icons, customer portraits and job data). They are **generated** by code 
 assistant, not drawn, modelled or recorded by hand ([docs/ASSETS.md](docs/ASSETS.md)). They are stand-ins:
 **hand-made assets are planned for 1.0**, so that OpenGG can be played on its own too; until then it is for playing
 the original's content. The photographic surfaces in `data/hd` (asphalt, grass, planks, metal) are CC0 pictures from
-ambientCG ([data/hd/LICENSES.md](data/hd/LICENSES.md)).
+ambientCG ([data/hd/LICENSES.md](data/hd/LICENSES.md)); the fonts in `game/Fonts` are under the SIL Open Font
+License ([game/Fonts/LICENSES.md](game/Fonts/LICENSES.md)).
 
 ## Legal
 
@@ -80,11 +89,13 @@ npm run gen:assets        # the placeholder pack: data/ai
 dotnet test core/OpenGG.Core.Tests
 godot --path game         # run from source (or open game/project.godot in the editor)
 godot --headless --path game --export-release "Windows Desktop" ../build/OpenGG/OpenGG.exe
+godot --headless --path game --export-release "Linux" ../build/OpenGG-linux/OpenGG.x86_64
 ```
 
-An exported build looks for `data/ai` and `data/hd` next to `OpenGG.exe`. The version is `config/version` in
+An exported build looks for `data/ai` and `data/hd` next to the program. The version is `config/version` in
 `game/project.godot`; pushing the tag `v` + that version (such as `v0.1.0`) makes
-[.github/workflows/release.yml](.github/workflows/release.yml) build the Windows package and attach it to a release.
+[.github/workflows/release.yml](.github/workflows/release.yml) build the Windows and Linux packages and attach them to
+a release.
 
 More: [ARCHITECTURE](docs/ARCHITECTURE.md) (how it fits together), [ORIGINAL_IMPORT](docs/ORIGINAL_IMPORT.md) (what is
 read from the original, and how), [ASSETS](docs/ASSETS.md) (the placeholders), [formats](docs/formats) (the
@@ -98,4 +109,4 @@ Questions and ideas go to [Discussions](../../discussions).
 ## Licence
 
 OpenGG is free software under the [GNU General Public License, version 3](LICENSE), the generated placeholder pack
-included. The pictures in `data/hd` are CC0.
+included. The pictures in `data/hd` are CC0; the fonts in `game/Fonts` are under the SIL Open Font License 1.1.

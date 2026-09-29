@@ -1199,6 +1199,12 @@ public partial class Thumbnails : SubViewport
                             : new StandardMaterial3D { AlbedoColor = colour, Metallic = 0.35f, Roughness = 0.38f });
             }
         }
+        if (shot.Pose == Pose.Catalog)
+            // The Catalog's own light (measured), on the original's materials: the painted ones as recoloured above.
+            foreach (var mi in ModelData.MeshesOf(obj))
+                for (int s = 0; mi.Mesh is not null && s < mi.Mesh.GetSurfaceCount(); s++)
+                    if (mi.GetSurfaceOverrideMaterial(s) is ShaderMaterial own && OrigLook.IsOrig(own)) own.SetShaderParameter("catalog", 1f);
+                    else if (mi.Mesh.SurfaceGetMaterial(s) is ShaderMaterial sm && OrigLook.IsOrig(sm)) mi.SetSurfaceOverrideMaterial(s, OrigLook.ForCatalog(sm));
         var box = model.Bounds;
         obj.Position = -box.GetCenter();
         var turn = new Node3D { Rotation = new Vector3(0, Mathf.DegToRad(shot.Angle), 0) };

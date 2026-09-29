@@ -367,9 +367,7 @@ public sealed class Model3ds
                 uniform float diffuse = 0.5;
                 uniform vec3 towards_light = vec3(0.0, 1.0, 0.0);
                 varying float lit;
-                vec3 to_linear(vec3 c) {
-                	return mix(pow((c + 0.055) / 1.055, vec3(2.4)), c / 12.92, lessThan(c, vec3(0.04045)));
-                }
+                {{OrigLook.ColourSpace}}
                 void vertex() {
                 	vec3 n = normalize((MODEL_NORMAL_MATRIX * NORMAL));
                 	lit = min(ambient + diffuse * max(dot(n, normalize(towards_light)), 0.0), 1.0);

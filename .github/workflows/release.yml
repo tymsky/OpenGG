@@ -1,4 +1,4 @@
-# Builds OpenGG for Windows and, for a pushed tag, attaches the package to a GitHub release. The version is
+# Builds OpenGG for Windows and Linux and, for a pushed tag, attaches the packages to a GitHub release. The version is
 # config/version in game/project.godot (semantic versioning); a release's tag is "v" + it (v0.1.0, v0.2.0-rc.1, ...),
 # and a tag with a pre-release part (after a hyphen) makes a pre-release. Run it by hand (Actions > Build and release >
 # Run workflow) to get the package as a build artifact only.
@@ -105,3 +105,82 @@ jobs:
         with:
           name: OpenGG-windows-x64
           path: ${{ env.ZIP }}
+
+  linux:
+    # After windows: that job makes the release, this one adds its package to it.
+    needs: windows
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Version
+        run: |
+          v=$(sed -n 's/^config\/version="\([^"]*\)"/\1/p' game/project.godot)
+          [ -n "$v" ] || { echo "game/project.godot has no config/version"; exit 1; }
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$v" ]; then
+            echo "The tag $GITHUB_REF_NAME does not match config/version $v (it should be v$v)"; exit 1
+          fi
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "8.0.x"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Placeholder pack (data/ai)
+        run: |
+          npm ci
+          npm run gen:assets
+
+      - name: Tests
+        run: dotnet test core/OpenGG.Core.Tests --configuration Release
+
+      - name: Godot .NET and its export templates
+        run: |
+          v="$GODOT_VERSION-$GODOT_STATUS"
+          base="https://github.com/godotengine/godot-builds/releases/download/$v"
+          curl -fsSL -o "$RUNNER_TEMP/godot.zip" "$base/Godot_v${v}_mono_linux_x86_64.zip"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          curl -fsSL -o "$RUNNER_TEMP/templates.zip" "$base/Godot_v${v}_mono_export_templates.tpz"
+          unzip -q "$RUNNER_TEMP/templates.zip" -d "$RUNNER_TEMP/templates"
+          dest="$HOME/.local/share/godot/export_templates/$GODOT_VERSION.$GODOT_STATUS.mono"
+          mkdir -p "$dest"
+          cp -r "$RUNNER_TEMP"/templates/templates/* "$dest"
+          echo "GODOT=$(find "$RUNNER_TEMP/godot" -name 'Godot_*_mono_linux.x86_64' | head -1)" >> "$GITHUB_ENV"
+
+      - name: Export
+        run: |
+          out="$PWD/build/OpenGG"
+          mkdir -p "$out/data"
+          # The first run imports the project (there is no .godot folder in a fresh checkout).
+          "$GODOT" --headless --path game --import || true
+          "$GODOT" --headless --path game --export-release "Linux" "$out/OpenGG.x86_64"
+          [ -f "$out/OpenGG.x86_64" ] || { echo "The export did not produce OpenGG.x86_64"; exit 1; }
+          cp -r data/ai data/hd "$out/data/"
+          cp LICENSE README.md CHANGELOG.md "$out"
+
+      - name: Package
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then name="$VERSION"; else name="$VERSION-dev-${GITHUB_SHA::7}"; fi
+          tgz="OpenGG-$name-linux-x64.tar.gz"
+          tar -czf "$tgz" -C build OpenGG
+          echo "TGZ=$tgz" >> "$GITHUB_ENV"
+
+      - name: Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v3
+        with:
+          files: ${{ env.TGZ }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
+
+      - name: Artifact
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v7
+        with:
+          name: OpenGG-linux-x64
+          path: ${{ env.TGZ }}

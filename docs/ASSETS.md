@@ -25,6 +25,13 @@ must be CC0, each listed with its source in [data/hd/LICENSES.md](../data/hd/LIC
 `game/Scripts/View3D/ModernLook.cs` reads them (`textures/<asset>/color.jpg`, `normal.jpg`, `roughness.jpg`,
 `opacity.jpg`); without them the look falls back to the plain placeholder materials.
 
+## Fonts (`game/Fonts`)
+
+OpenGG's own look letters in bundled fonts under the SIL Open Font License, the same on every system: Anton, Archivo
+Black, Open Sans and a narrowed Barlow Condensed (`tools/fonts/narrow.py`), each within a few per cent of the width of
+the Windows font it stands in for (Impact, Arial Black, Tahoma, Bahnschrift). Sources in
+[game/Fonts/LICENSES.md](../game/Fonts/LICENSES.md); `game/Scripts/Ui/Look.cs` loads them.
+
 ## Logical ids
 
 Content never names files, only ids resolved through the manifest: models `body.sedan`, `part.i4_head`,

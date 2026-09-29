@@ -23,6 +23,13 @@ public static class OrigLook
     public static Vector3 Specular = new(0.38f, 0.38f, 0.38f);
     public static float Power = 14f;
     public static Vector3 SpecLight = new(-0.207f, 0.766f, -0.609f);
+    /// <summary>
+    /// The Catalog's pictures: more ambient and a weaker light from the camera's left, fitted pixel by pixel on the
+    /// original's Catalog (a Mustang's and a pickup's ENGINE and R GEAR pages, 68 000 pixels: 3.6 off on average in the
+    /// colour numbers, 38.7 with the WorkShop's light). The pictures' materials take it by <see cref="ForCatalog"/>.
+    /// </summary>
+    public static readonly Vector3 CatalogAmbient = Vector3.One * 0.252f, CatalogDiffuse = Vector3.One * 0.288f,
+        CatalogLight = new(-0.666f, -0.008f, 0.746f);
     /// <summary>Lab: 1 draws the camera-space normals instead (as colours, 0.5 + n / 2), 2 the paint white and
     /// everything else black, 3 each material's own colour at half strength (textured ones blue), 4 the
     /// material's number (red: n mod 85 times 3, green: n div 85 times 3; blue: body meshes).</summary>
@@ -83,6 +90,9 @@ public static class OrigLook
             ("orig_power", Power, RenderingServer.GlobalShaderParameterType.Float),
             ("orig_spec_light", SpecLight.Normalized(), RenderingServer.GlobalShaderParameterType.Vec3),
             ("orig_debug", Debug, RenderingServer.GlobalShaderParameterType.Float),
+            ("orig_cat_ambient", CatalogAmbient, RenderingServer.GlobalShaderParameterType.Vec3),
+            ("orig_cat_diffuse", CatalogDiffuse, RenderingServer.GlobalShaderParameterType.Vec3),
+            ("orig_cat_light", CatalogLight.Normalized(), RenderingServer.GlobalShaderParameterType.Vec3),
         };
         foreach (var (name, value, type) in values)
         {
@@ -91,6 +101,21 @@ public static class OrigLook
         }
         registered = true;
     }
+
+    /// <summary>
+    /// The shaders' colour numbers (as the original's, sRGB) to the light the renderer blends in and back. Forward+
+    /// blends in linear light; the Compatibility renderer (OpenGL, Godot's fallback without Vulkan or Direct3D 12)
+    /// blends the colour numbers themselves and shows ALBEDO as it is, so there both are the identity.
+    /// </summary>
+    public const string ColourSpace = """
+        #if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+        vec3 to_linear(vec3 c) { return c; }
+        vec3 to_srgb(vec3 c) { return c; }
+        #else
+        vec3 to_linear(vec3 c) { return mix(pow((c + 0.055) / 1.055, vec3(2.4)), c / 12.92, lessThan(c, vec3(0.04045))); }
+        vec3 to_srgb(vec3 c) { return mix(1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, c * 12.92, lessThan(c, vec3(0.0031308))); }
+        #endif
+        """;
 
     /// <summary>How a material is blended: as the .car's blend class (604).</summary>
     public enum Blend { Opaque, Alpha, Add }
@@ -129,6 +154,7 @@ public static class OrigLook
                 uniform float shine = 0.0;
                 uniform float is_paint = 0.0;
                 uniform float mat_id = 0.0;
+                uniform float catalog = 0.0;
 
                 global uniform vec3 orig_ambient;
                 global uniform vec3 orig_diffuse;
@@ -137,23 +163,25 @@ public static class OrigLook
                 global uniform float orig_power;
                 global uniform vec3 orig_spec_light;
                 global uniform float orig_debug;
+                global uniform vec3 orig_cat_ambient;
+                global uniform vec3 orig_cat_diffuse;
+                global uniform vec3 orig_cat_light;
 
                 varying {{interp}}vec3 lit;
                 varying {{interp}}vec3 spec;
                 varying vec3 view_normal;
 
-                vec3 to_linear(vec3 c) {
-                	return mix(pow((c + 0.055) / 1.055, vec3(2.4)), c / 12.92, lessThan(c, vec3(0.04045)));
-                }
+                {{ColourSpace}}
 
                 void vertex() {
                 	vec3 n = normalize(MODELVIEW_NORMAL_MATRIX * {{normal}});
                 	view_normal = n;
                 	vec3 p = (MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
-                	vec3 l = normalize(orig_light);
-                	lit = orig_ambient + orig_diffuse * max(dot(n, l), 0.0);
+                	bool cat = catalog > 0.5;
+                	vec3 l = normalize(cat ? orig_cat_light : orig_light);
+                	lit = (cat ? orig_cat_ambient : orig_ambient) + (cat ? orig_cat_diffuse : orig_diffuse) * max(dot(n, l), 0.0);
                 	vec3 h = normalize(normalize(orig_spec_light) + normalize(-p));
-                	spec = shine * orig_specular * pow(max(dot(n, h), 0.0), orig_power);
+                	spec = (cat ? 0.0 : shine) * orig_specular * pow(max(dot(n, h), 0.0), orig_power);
                 }
 
                 void fragment() {
@@ -164,7 +192,7 @@ public static class OrigLook
                 	vec3 base = min(c.rgb * lit, vec3(1.0)) * 2.0;
                 	if (textured) {
                 		vec4 t = texture(tex, UV);
-                		base *= t.rgb;
+                		base *= t.rgb * (catalog > 0.5 && shine > 0.5 ? 0.5 : 1.0);
                 		c.a *= t.a;
                 	}
                 	base = min(base, vec3(1.0));
@@ -228,6 +256,17 @@ public static class OrigLook
     }
 
     public static bool IsOrig(Material? m) => m is ShaderMaterial sm && shaders.ContainsValue(sm.Shader);
+
+    static readonly Dictionary<ShaderMaterial, ShaderMaterial> catalogMats = [];
+
+    /// <summary>The same material lit as the Catalog's pictures are (see <see cref="CatalogAmbient"/>).</summary>
+    public static ShaderMaterial ForCatalog(ShaderMaterial m)
+    {
+        if (catalogMats.TryGetValue(m, out var c)) return c;
+        c = (ShaderMaterial)m.Duplicate();
+        c.SetShaderParameter("catalog", 1f);
+        return catalogMats[m] = c;
+    }
 
     // ---- a part in its condition's colour -------------------------------------------------------------------
 
@@ -328,12 +367,7 @@ public static class OrigLook
                 varying {{interp}}vec3 lit;
                 varying {{interp}}vec3 spec;
 
-                vec3 to_linear(vec3 c) {
-                	return mix(pow((c + 0.055) / 1.055, vec3(2.4)), c / 12.92, lessThan(c, vec3(0.04045)));
-                }
-                vec3 to_srgb(vec3 c) {
-                	return mix(1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, c * 12.92, lessThan(c, vec3(0.0031308)));
-                }
+                {{ColourSpace}}
 
                 void vertex() {
                 	vec3 n = normalize(MODELVIEW_NORMAL_MATRIX * {{normal}});

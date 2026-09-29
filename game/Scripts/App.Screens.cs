@@ -161,16 +161,16 @@ public partial class App
             // are made one after another, so those not made yet are held back until the last one is there.
             var late = new List<(CatalogItem Card, PartDef Part)>();
             int left = 0;
-            void ShowLate()
+            bool waited = false;
+            // The pictures made so far onto their cards; the others stay held back and come as they are made.
+            void ShowLate() => late.RemoveAll(l =>
             {
-                foreach (var (card, part) in late)
-                    if (IsInstanceValid(card) && turningCard != part.Id && thumbs.Get(part.Model, Skinned, car, null, CatalogAngle(part.Id)) is { } pic)
-                    {
-                        card.Picture = pic;
-                        card.QueueRedraw();
-                    }
-                late.Clear();
-            }
+                if (!IsInstanceValid(l.Card)) return true;
+                if (turningCard == l.Part.Id || thumbs.Get(l.Part.Model, Skinned, car, null, CatalogAngle(l.Part.Id)) is not { } pic) return false;
+                l.Card.Picture = pic;
+                l.Card.QueueRedraw();
+                return true;
+            });
             for (int page = 0; page < 2; page++)
             {
                 var area = page == 0 ? L.LeftPage : L.RightPage;
@@ -189,7 +189,7 @@ public partial class App
                     var b = Put(screenUi, new CatalogItem { Label = p.Name, TooltipText = Tip(p.Name), Classic = Skinned, Quiet = true }, cell);
                     b.Picture = thumbs.Get(p.Model, Skinned, car, _ =>
                     {
-                        if (--left == 0) ShowLate();
+                        if (--left <= 0 || waited) ShowLate();
                     }, CatalogAngle(p.Id));
                     if (b.Picture is null)
                     {
@@ -208,8 +208,12 @@ public partial class App
                     }
                 }
             }
-            // A picture that could not be made must not keep the others back.
-            if (late.Count > 0) GetTree().CreateTimer(3).Timeout += ShowLate;
+            // A picture that could not be made must not keep the others back: after a while each comes as it is made.
+            if (late.Count > 0) GetTree().CreateTimer(3).Timeout += () =>
+            {
+                waited = true;
+                ShowLate();
+            };
         }
         int spreads = Math.Max(1, (count + perSpread - 1) / perSpread);
         catalogSpread = Math.Clamp(catalogSpread, 0, spreads - 1);

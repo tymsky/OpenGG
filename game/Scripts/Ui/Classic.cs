@@ -138,8 +138,27 @@ public partial class BlankPlate : Control
 }
 
 /// <summary>
-/// A view tab: a grey plate. The other views' names are stamped into it (grey letters with a light and a
-/// dark edge); the chosen view's name is printed in black. A view the job doesn't allow is an empty plate.
+/// The band the view tabs sit on, from the screen's left edge to the money box (measured on the original's WorkShop:
+/// y 41 to 80, a grey a little darker than the tabs).
+/// </summary>
+public partial class TabStrip : Control
+{
+    public TabStrip() => MouseFilter = MouseFilterEnum.Ignore;
+
+    public override void _Draw()
+    {
+        if (UiSkin.Active) return;  // the skin's screen has its own
+        var r = new Rect2(Vector2.Zero, Size);
+        DrawTextureRect(Look.GreyTexture, r, tile: true, modulate: new Color(1.25f, 1.25f, 1.25f));
+        DrawRect(r, Color.FromHtml("#242424"), filled: false, width: 1);
+        Bevel.Draw(this, r.Grow(-1), new Color(1, 1, 1, 0.12f), new Color(0, 0, 0, 0.35f));
+    }
+}
+
+/// <summary>
+/// A view tab: a grey plate. The other views' names are stamped into it (grey letters with a light and a dark edge);
+/// the chosen view's plate is darker and its name printed in black, in the same letters. A view the job doesn't allow
+/// is an empty plate.
 /// </summary>
 public partial class TabPlate : DrawnButton
 {
@@ -151,22 +170,20 @@ public partial class TabPlate : DrawnButton
     {
         if (DrawSkin(Blank ? null : Active)) return;
         var r = new Rect2(Vector2.Zero, Size);
-        DrawTextureRect(Look.GreyTexture, r, tile: true, modulate: Active ? new Color(1.75f, 1.75f, 1.75f) : new Color(1.6f, 1.6f, 1.6f));
+        DrawTextureRect(Look.GreyTexture, r, tile: true, modulate: Active ? new Color(1.17f, 1.17f, 1.17f) : new Color(1.6f, 1.6f, 1.6f));
         DrawRect(r, Color.FromHtml("#242424"), filled: false, width: 1);
         Bevel.Draw(this, r.Grow(-1), new Color(1, 1, 1, 0.45f), new Color(0, 0, 0, 0.45f));
         if (Blank) return;
-        if (Active)
-        {
-            var f = Look.Heavy;
-            const int size = 16;
-            var pos = new Vector2(0, Baseline(f, size, Size.Y) + 1);
-            DrawString(f, pos, Spaced(Label), HorizontalAlignment.Center, Size.X, size, Color.FromHtml("#0c0c0c"));
-            return;
-        }
+        // The same letters on every tab, as in the original: the chosen one printed black, the others stamped.
         var g = Look.Impact;
         const int gsize = 24;
         var gp = new Vector2(0, Baseline(g, gsize, Size.Y) + 1);
         string text = Spaced(Label);
+        if (Active)
+        {
+            DrawString(g, gp, text, HorizontalAlignment.Center, Size.X, gsize, Color.FromHtml("#0c0c0c"));
+            return;
+        }
         DrawString(g, gp + new Vector2(1, 1), text, HorizontalAlignment.Center, Size.X, gsize, Color.FromHtml("#1a1a1a"));
         DrawString(g, gp + new Vector2(-1, -1), text, HorizontalAlignment.Center, Size.X, gsize, Color.FromHtml("#d0d0d0"));
         DrawString(g, gp, text, HorizontalAlignment.Center, Size.X, gsize, Hovered ? Color.FromHtml("#8a8a8a") : Color.FromHtml("#707070"));

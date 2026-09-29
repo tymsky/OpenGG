@@ -257,13 +257,12 @@ public partial class VehicleView : Node3D
     /// (a multiply in linear light would darken dark ground more).</summary>
     static readonly Shader ShadowShader = new()
     {
-        Code = """
+        Code = $$"""
             shader_type spatial;
             render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabled;
             uniform sampler2D under_tex : hint_screen_texture, filter_nearest;
             uniform float keep = 0.46;
-            vec3 to_srgb(vec3 c) { return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c)); }
-            vec3 to_linear(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), c)); }
+            {{OrigLook.ColourSpace}}
             void fragment() {
                 ALBEDO = to_linear(to_srgb(texture(under_tex, SCREEN_UV).rgb) * keep);
                 ALPHA = 1.0;

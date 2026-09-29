@@ -606,8 +606,9 @@ public partial class Main : Node
     static string ShortPath(string path)
     {
         if (path.Length <= 44) return path;
-        var parts = path.Replace('/', '\\').TrimEnd('\\').Split('\\');
-        return parts.Length > 2 ? "...\\" + parts[^2] + "\\" + parts[^1] : path;
+        var sep = Path.DirectorySeparatorChar;
+        var parts = path.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length > 2 ? $"...{sep}{parts[^2]}{sep}{parts[^1]}" : path;
     }
 
     async Task Seconds(double s) => await ToSignal(GetTree().CreateTimer(s), SceneTreeTimer.SignalName.Timeout);
@@ -2138,7 +2139,7 @@ public partial class Main : Node
         _ = a.DemoJob();
         await Frames(30);
         Shot(dir, "11_job_request");
-        a.DemoCloseDialog();
+        a.DemoConfirmDialog();  // OK (our own jobs' box has a CANCEL too)
         await Frames(30);
         Shot(dir, "12_job_started");
         a.DemoFinishJob();

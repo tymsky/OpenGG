@@ -276,6 +276,13 @@ Tags: `M` measured in the running game, `C` confirmed from files or the manual, 
   in the car model's paint. The name's tops are 39 below the card's. It turns while the pointer is over the card (a turn
   in about 1.55 s) and stays as left, the next visit too; the bin's pictures do not turn with it. *Twenty
   pictures fitted by their outlines.*
+- `M` The pictures have a light of their own: more ambient (0.25) and a weaker light (0.29) from the camera's left and
+  in front, no highlight, and a body mesh's texture taken once, not twice as in the WorkShop (so a car's sponsor panels
+  come out darker, its wheels' rims as bright). *Fitted pixel by pixel on the ENGINE, BODY and R GEAR pages of a
+  Mustang, a pickup and a Commodore: 3.6 off on average in the colour numbers, 38.7 with the WorkShop's light.*
+- `M` Which of a picture and its name is on top differs from card to card (a pickup's wheels under their names, the same
+  wheels on a Mustang over them, a Commodore's left wheel over its name and its left rear wheel under); the same on a
+  second visit. OpenGG draws the picture over the name, as most are. *Why is not known.*
 
 ## JunkYard
 
