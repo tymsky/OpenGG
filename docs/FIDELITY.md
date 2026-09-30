@@ -64,7 +64,8 @@ Tags: `M` measured in the running game, `C` confirmed from files or the manual, 
   one belongs to that add-on (a T-Bird's HotRod Dual Carbs and Blower, its ChopTop windshields, a Fairmont's Boosters).
   *The T-Bird and Fairmont jobs had them bought and fitted.*
 - `M` Job Help shows the hints in turn (1, 2, 1, 2...), with OK / RESTART in Jobs Mode and OK / CANCEL (give up) in Free
-  Play. RESTART asks nothing: the Job Request comes back, the budget full, the damage dealt again.
+  Play. RESTART asks nothing: the Job Request comes back, the budget full, the damage dealt again. While its box is up
+  the Job Help panel is gone from the column.
 - `M` Exit during a job warns that the job will be lost (OK / CANCEL); after OK it is gone. *Signed in again: an empty
   WorkShop and another offer.* OpenGG drops it as Job Help would, so in Jobs Mode the same job starts over.
 - `M` In Jobs Mode each Job Request comes over a blank WorkShop (no tabs, commands or Exit, nothing in the view, the money
@@ -193,17 +194,19 @@ Tags: `M` measured in the running game, `C` confirmed from files or the manual, 
 - `M` **Show Condition** works while held (the `C` key is ours). It draws only the parts (not the body's fixed pieces nor
   the decals), each in its condition colour **added** onto what is behind it: the grey shows through, overlaps add up,
   both sides of every face count and nothing hides them; lit like the car in the WorkShop but without the body's
-  highlight; black parts keep their own look. On COMPLETE it shows only the job's regions. *Fitted on the first
-  three jobs' views.*
-- `M` The part under the pointer lights up as Show Condition draws it (black ones too, in a dark grey), its name under the
-  view. Not with Body Paint in hand, nor in bolt mode.
+  highlight; black parts in a light grey (a black wheel near white at its lit face). On COMPLETE it shows only the
+  job's regions, the camera framing them while it is held (an engine job's engine as the ENGINE tab frames it).
+  *Fitted on the first three jobs' views; black on a Wynn's black wheel and Transmission.*
+- `M` The part under the pointer lights up as Show Condition draws it (black ones too, in the light grey), its name
+  under the view. Not with Body Paint in hand, nor in bolt mode.
 - `M` On COMPLETE the pointer lights the whole region under it (the body, the running gear) and names nothing; a click
   opens that region's tab, with its sound.
 
 ### Parts Bin
 
 - `M` 8 places a page: four across at x 7, 101, 194 and 288, two rows 50 apart from y 372, each 93 × 50 on black; the
-  names' tops 40 below the place's, a space 6 wide.
+  names' tops 40 below the place's, a space 6 wide, whole over the picture (the Belts' dark strip
+  comes down to their tops). The Catalog's pictures, unlike them, cover their names (its right wheels, black discs).
 - `M` A condition triangle 13 × 10 in the place's corner (red 173, 8, 8; yellow 173, 174, 8; green 8, 113, 8; black 57,
   56, 57) and, round a part under the pointer or picked up, a one-pixel outline a little brighter (red 189, 12, 8;
   yellow 189, 190, 8; green 8, 125, 8; black 57, 60, 57).
@@ -393,10 +396,13 @@ Tags: `M` measured in the running game, `C` confirmed from files or the manual, 
   from the lot; its Repair Time the same after minutes more.*
 - `M` Your cars stand in its **twelve bays** from the first, in Number order, along the bay lines, their fronts to the
   lane, each at its bay marker's own origin (car_01 … car_12), not the marker's middle. *Every marker within a pixel over
-  14 captures.* Where the others go when a car leaves is `L`: the save keeps only their order.
+  14 captures.* The car in the WorkShop keeps its bay, empty while it is out: with Number 1 of four in the WorkShop,
+  Number 0 stands in the first bay, the second is empty, Numbers 2 and 3 in the third and fourth. *Generated saves,
+  runs/lot2.* Where the others go when a car is sold is `L`: the save keeps only their order.
 - `M` The first visit in a run of the game opens on the first bay; later ones where the camera was left. ◄ ► and the
   arrow keys move it along the lane while held (► towards the first bay), 0.95 bays a second, on to the last bay, cars
-  parked there or not. The figures and the gold marker under the view follow the car nearest the view's middle; a click
+  parked there or not. The figures and the gold marker under the view follow the car nearest the view's middle, blank
+  when no car has its middle in the view (one just showing at the edge); a click
   anywhere in the view brings that car into the WorkShop. *The original draws the lot about 60 times a second, moving it
   a step each frame.*
 - `M` Put Car In Lot parks the WorkShop's car and takes you there. With twelve cars of yours, Go To Auction is refused
@@ -438,7 +444,8 @@ Tags: `M` measured in the running game, `C` confirmed from files or the manual, 
 ## Screens and dialogs
 
 - `M` One 640 × 480 screen at a time, scaled to the window, laid out from captures: the top bar, tab plates, tools, the
-  gold command column with its fixed places, the Parts Bin, REPAIR and SCRAP.
+  gold command column with its fixed places, the Parts Bin, REPAIR and SCRAP. The top bar names the mechanic as saved
+  ("Chemical", "przemek"), on every screen, the Auction's too.
 - `M` The view tabs and the tools act as they are pressed; the command plates, Get A Job and the boxes' buttons as they
   are let go, and do nothing if the pointer moved off first. Nothing lights up under the pointer. *Filmed at 60 fps.*
 - `M` Yellow dialogs with a black title bar; errors ("Assembly Error!") are dialogs. Every one comes up at (200, 135):
@@ -552,6 +559,8 @@ the actions on OpenGG, at the same places, so the two can be compared.
    Auction): the whole cars of a Mustang and a Pickup come $5 off, and so do a few cars bought. With it and the cars
    drawn as measured, its steps run a little high: at Novice a median of 195 (measured about 175), at Mekada 100
    (measured 90, two in three $110 or less; OpenGG's a little over half).
+4. Body Paint's first choice in a run: no brush framed and no colour's white frame showing (white itself, whose frame
+   would not show?); a brush picked stays picked for the run, across mechanics. OpenGG starts with the panel brush.
 
 Tried and not in the tested game: the manual's "Model In Photo" (the 2002 archives have no picture for it), a SETTINGS
 button on the sign-in sheet (its picture is in the archives, never loaded), and the key chords passed round as cheats

@@ -137,6 +137,7 @@ public partial class Main : Node
             return;
         }
         if (Args.Get("lab") is { } lab) Report(Lab(lab, Args.Get("autoshot") ?? Path.GetDirectoryName(lab) ?? "."));
+        else if (Args.Get("replay") is { } scenario) Report(Replay(scenario, Args.Get("autoshot") ?? Path.ChangeExtension(scenario, null)));
         else if (Args.Get("soundcheck") is { } check) Report(SoundCheck(check));
         else if (Args.Get("partscheck") is { } parts) Report(PartsCheck(parts));
         else if (Args.Get("feelcheck") is { } feel) Report(FeelCheck(feel));
@@ -410,6 +411,10 @@ public partial class Main : Node
                     _ = a.DemoJobHelp();
                     await Frames(30);
                     Shot(dir, "c2_job_update");
+                    // Measured: the Job Help panel is gone while Job Update is up, and back after OK.
+                    a.DemoConfirmDialog();
+                    await Frames(20);
+                    Shot(dir, "c2b_job_update_ok");
                 }
                 else if (kind == "nothing")
                 {

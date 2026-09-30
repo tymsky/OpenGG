@@ -392,8 +392,8 @@ public partial class VehicleView : Node3D
         var st = Vehicle?.Slots.GetValueOrDefault(sv.Def.Id);
         bool on = xray || sv.Def.Region == litRegion;
         // The original's cars: each surface in the condition's colour added onto what is behind (OrigLook.Condition),
-        // lit and highlighted as that surface is; black parts keep their own look.
-        bool orig = OrigLookCar && on && st?.Part is { Condition: > 0 };
+        // lit and highlighted as that surface is; black parts too, in a light grey.
+        bool orig = OrigLookCar && on && st?.Part is not null;
         if (orig)
             foreach (var mi in ModelData.MeshesOf(sv.Model))
                 for (int i = 0; i < mi.GetSurfaceOverrideMaterialCount(); i++)

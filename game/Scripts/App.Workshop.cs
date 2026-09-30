@@ -335,7 +335,8 @@ public partial class App
                 plate.Pressed += act;
             }
         }
-        if (help)
+        // Measured: while Job Update is up its panel is gone, the column's empty places showing there.
+        if (help && !jobUpdateUp)
         {
             var pic = finishing is { } f ? f.ThanksPortrait ?? f.Portrait : job!.Portrait;
             var panel = Put(cmdLayer, new JobHelpPanel { Portrait = Icon(pic, 96), SkinUp = Skinned ? UiSkin.Picture("jobhelp") : null }, Skinned ? L.Orig.JobHelp : L.JobHelp);
@@ -599,6 +600,7 @@ public partial class App
         if (workshop.View is { } view)
             view.JobRegions = Game.State.Job?.Tabs is { } t ? t.Select(x => x.ToRegion()).OfType<Core.Content.Region>().ToHashSet() : null;
         workshop.View?.SetXray(on);
+        workshop.FrameXray(on ? workshop.View?.JobRegions : null);
         Refresh();
     }
 
@@ -1291,6 +1293,8 @@ public partial class App
         workshop.EndShowcase();
     }
 
+    bool jobUpdateUp;
+
     async Task JobHelp()
     {
         if (Game.State.Job is not { } job) return;
@@ -1298,8 +1302,19 @@ public partial class App
         bool chain = Game.InJobsMode;
         // Measured: Job Help comes up with a sound of its own instead of the dialogs'.
         dialogs.NextOpenSound = "snd.job_help";
-        var answer = await JobDialog("Job Update", job, hint, job.Portrait, Words.Get(chain ? "job.update.restart" : "job.update.cancel"),
-            [new("OK", "ok", true), new(chain ? "RESTART" : "CANCEL", "other")]);
+        jobUpdateUp = true;
+        Refresh();
+        string answer;
+        try
+        {
+            answer = await JobDialog("Job Update", job, hint, job.Portrait, Words.Get(chain ? "job.update.restart" : "job.update.cancel"),
+                [new("OK", "ok", true), new(chain ? "RESTART" : "CANCEL", "other")]);
+        }
+        finally
+        {
+            jobUpdateUp = false;
+            Refresh();
+        }
         if (answer != "other") return;
         SetBoltSlot(null);
         if (chain)
@@ -1536,6 +1551,9 @@ public partial class PartSlot : BinSlot
             // Measured: the slot's own black ground (a slot carried over the car hides what is behind it), the picture,
             // the name's glyph tops 40 below the slot's top, the triangle inside the one-pixel outline.
             DrawRect(new Rect2(Vector2.Zero, Size), Colors.Black);
+            // Measured: the part's box diagonal 50 pixels, in the slot's middle; its name over it (a long part, the
+            // Belts' or the Waterpump's, reaches under the letters).
+            DrawThumb(new Rect2((Size.X - 50) / 2, 0, 50, 50), Live ?? Thumb);
             if (UiSkin.Font("tiny") is { } tiny)
             {
                 // A name too long for the place goes on two lines, as the Catalog's do (ours: not seen in a bin).
@@ -1544,8 +1562,6 @@ public partial class PartSlot : BinSlot
                 for (int r = 0; r < rows.Count; r++)
                     DrawString(tiny, new Vector2(0, 40 - (rows.Count - 1 - r) * 9 + tiny.GetAscent(ts)), rows[r], HorizontalAlignment.Center, Size.X, ts);
             }
-            // Measured: the part's box diagonal 50 pixels, in the slot's middle, over its name.
-            DrawThumb(new Rect2((Size.X - 50) / 2, 0, 50, 50), Live ?? Thumb);
             if (Selected || over) DrawRect(new Rect2(Vector2.Zero, Size).Grow(-0.5f), ClassicOutline[cond], filled: false, width: 1);
             for (int r = 0; r < TriangleRows.Length; r++) DrawRect(new Rect2(1, 1 + r, TriangleRows[r], 1), ClassicTriangle[cond]);
             return;

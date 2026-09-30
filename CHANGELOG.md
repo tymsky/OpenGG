@@ -4,6 +4,19 @@ Versions follow [Semantic Versioning](https://semver.org): **MAJOR** when saves 
 working, **MINOR** for new features and changes to how the game plays, **PATCH** for fixes only. While the version is
 0.x (the beta), a MINOR release may still break saves, and its notes say so.
 
+## 0.2.1
+
+Fixes found side by side with the original (the same save in both). Saves of 0.2.0 keep working.
+
+- The Auction showed no mechanic's name and no money: the screen's front picture covered them.
+- The top bar names the mechanic as saved ("Chemical"), not in lower case.
+- Parts Bin: a part's name stays whole over its picture (the Belts' covered their name).
+- Show Condition and the pointer draw black parts in a light grey, as the original does (they kept their own look).
+- Show Condition held on COMPLETE during a job frames the job's regions (an engine job's engine as the ENGINE tab does).
+- Job Update hides the Job Help panel while it is up.
+- Car Lot: the car in the WorkShop keeps its bay (the others no longer move up into it), and the figures stay blank
+  when no car has its middle in the view.
+
 ## 0.2.0
 
 Windows and Linux. Saves of 0.1.0 keep working.

@@ -286,6 +286,9 @@ public partial class App : Control
         viewArea.AddChild(photo);
 
         front = Put(gameRoot, new TextureRect { MouseFilter = MouseFilterEnum.Ignore, Visible = false }, L.R(0, 0, 640, 480));
+        // The Auction's front picture covers the whole screen: the mechanic's name and the money stay over it.
+        gameRoot.MoveChild(mechanicName, front.GetIndex() + 1);
+        gameRoot.MoveChild(money, front.GetIndex() + 1);
 
         // WorkShop furniture that never moves.
         workshopUi = Put(gameRoot, new Control { MouseFilter = MouseFilterEnum.Ignore }, L.R(0, 0, 640, 480));
@@ -587,7 +590,7 @@ public partial class App : Control
                 break;
             case Screen.Lot:
                 ShowScene(lotScene);
-                lotScene.ShowLot(Game.State.Lot);
+                lotScene.ShowLot(Game.State.Lot, LotBays());
                 lotScene.OpenLot();
                 lotScene.LightCars();
                 lotHeld = 0;
@@ -645,6 +648,20 @@ public partial class App : Control
         };
         At(21.2, "snd.lot.crow");
         At(31.2, "snd.lot.car");
+    }
+
+    /// <summary>
+    /// Each parked car's bay. Measured (generated saves, the WorkShop holding Number 1 of four): every car you own keeps
+    /// its bay in Number order, the WorkShop's car too, whose bay stays empty while it is out.
+    /// </summary>
+    int[] LotBays()
+    {
+        var s = Game.State;
+        var lot = s.Lot.Where(s.Vehicles.ContainsKey).ToList();
+        var owned = lot.ToList();
+        if (s.Workshop is { } w && s.Vehicles.TryGetValue(w, out var wv) && wv.Owner == Core.Sim.Owner.Player && !owned.Contains(w)) owned.Add(w);
+        var order = owned.OrderBy(id => s.Vehicles[id].Number ?? int.MaxValue).ToList();
+        return lot.Select(id => order.IndexOf(id)).ToArray();
     }
 
     /// <summary>What you bought at the JunkYard goes to the Parts Bin.</summary>
@@ -709,7 +726,7 @@ public partial class App : Control
             case Screen.Lot:
                 PlaceView(L.LotView);
                 RenderBackdrop();
-                lotScene.ShowLot(Game.State.Lot);
+                lotScene.ShowLot(Game.State.Lot, LotBays());
                 RenderLot();
                 break;
         }
@@ -767,7 +784,8 @@ public partial class App : Control
     {
         // Measured: a finished job's budget stays in the money box until the WorkShop is cleared.
         var job = Game.State.Job ?? finishing;
-        mechanicName.Text = Game.State.Mechanic.ToLowerInvariant();
+        // Measured: the name as saved ("Chemical", "przemek"), not in capitals as on the sign-in sheet.
+        mechanicName.Text = Game.State.Mechanic;
         title.Text = Titles[(int)Screen];
         title.QueueRedraw();
         var amount = job?.Budget ?? Game.State.Cash;

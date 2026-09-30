@@ -275,13 +275,13 @@ public static class OrigLook
     /// Red and yellow fitted on the JunkYard's hovered single sheets (hood, fenders); green on the WorkShop's Show
     /// Condition (three views, 29000 pixels), which fits the JunkYard's green sheets as well. The weak channels come out
     /// about 15 in every colour (yellow's blue taken so: the captures keep blue in 5 bits). Black never shows in the
-    /// yard but in the visit it came with, and keeps its own look under Show Condition; ours fits the WorkShop's black
-    /// parts under the pointer (a transmission added about (41, 36, 33) onto the grey behind it). The last is black's in
+    /// yard but in the visit it came with; in the WorkShop, under Show Condition and the pointer, it is a light grey
+    /// (fitted on a Wynn's black wheel under Show Condition: its inside (190, 187, 190) on average). The last is black's in
     /// the JunkYard, fitted on the one seen there: a Left head added (64, 74, 82) onto the shelf's wood, OpenGG's
     /// WorkShop black the same part and view (35, 34, 31).
     /// </summary>
     public static readonly Vector3[] ConditionColours =
-        [new Vector3(26, 26, 26) / 255f, new Vector3(204, 15, 13) / 255f, new Vector3(188, 181, 16) / 255f, new Vector3(17, 136, 17) / 255f,
+        [new Vector3(120, 120, 120) / 255f, new Vector3(204, 15, 13) / 255f, new Vector3(188, 181, 16) / 255f, new Vector3(17, 136, 17) / 255f,
          new Vector3(50, 61, 75) / 255f];
 
     /// <summary>The JunkYard's part under the pointer (black in its own colour, see <see cref="ConditionColours"/>).</summary>
@@ -337,7 +337,7 @@ public static class OrigLook
     /// The WorkShop's part under the pointer, measured: drawn as Show Condition draws the parts, in its condition's
     /// colour added onto what is behind it instead of its own look (a green flywheel over a red block came out red and
     /// green together, (239, 174, 57), its own grey gone; a yellow door over the dark cab looks solid yellow), black
-    /// parts too, in a dark grey (a black transmission added about (41, 36, 33) onto the grey behind it).
+    /// parts too, in a light grey (a black wheel and Transmission came out near white at their lit faces).
     /// </summary>
     public static ShaderMaterial HoverFor(Material? original, int condition) => ConditionFor(original, condition);
 

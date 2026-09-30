@@ -46,7 +46,10 @@ data/hd/                 CC0 pictures for OpenGG's own look
 - **`Main`** finds the data folder, loads the ai pack and, if set, the original on top (its content, and its look
   through `UiSkin`), then starts `App`. For testing, `-- --autoshot <dir>` screenshots every screen on a scripted tour;
   `-- --soundcheck <dir>` repeats the actions measured on the original, at the same places, logging their times, so
-  the two recordings can be matched.
+  the two recordings can be matched. `-- --replay <scenario.jsonl>` (run with Godot's `--fixed-fps 60`) plays a
+  scenario with the mouse and keys on the 640 × 480 screen, the same file a script can play in the original, and saves
+  its screenshots, films of chosen boxes (every frame, with its time) and the game's state (`StateDump`, the form an
+  original's save is written in after `MekImport`); `--mechanics <folder>` brings the original's saves there over first.
 - **`ScreenMode`**: a window sized to the screen or the full screen (F11, Alt+Enter, the settings); the 640 × 480
   game scaled at 4:3 with bars, at whole multiples if asked. `GameImage` is the game's picture without the bars
   (snapshots, the tours' screenshots).

@@ -367,6 +367,7 @@ public partial class WorkshopScene : StageScene
     public void SetRegion(View region, bool animate = true)
     {
         Region = region;
+        xrayViews = null;
         View?.SetView(region);
         Frame(animate);
         UpdateContact();
@@ -425,16 +426,31 @@ public partial class WorkshopScene : StageScene
         if (View is not null) FrameOn(View, animate);
     }
 
+    /// <summary>Show Condition held on COMPLETE shows the job's regions alone. Measured: the camera frames them (an
+    /// engine job's engine as the ENGINE tab frames it) and goes back to the whole car as it is let go.</summary>
+    public void FrameXray(IReadOnlyCollection<Core.Content.Region>? regions)
+    {
+        xrayViews = Region == Core.Content.View.Complete && regions is { Count: > 0 } ? regions.Select(r => r.ToView()).ToList() : null;
+        Frame();
+    }
+
+    List<View>? xrayViews;
+
     bool FrameOn(VehicleView view, bool animate)
     {
-        if (!IsInsideTree() || !view.IsInsideTree() || view.Bounds(Region) is not { } box) return false;
+        var views = xrayViews ?? [Region];
+        Aabb? shown = null;
+        foreach (var v in views)
+            if (view.Bounds(v) is { } b) shown = shown is { } a ? a.Merge(b) : b;
+        if (!IsInsideTree() || !view.IsInsideTree() || shown is not { } box) return false;
+        var framing = views.Count == 1 ? views[0] : Core.Content.View.Complete;
         float size = box.Size.Length();
         // Keep the angle, re-centre on the tab's region and zoom to it (the engine fills the view). Fitted to the
         // original's screenshots: level, the eye is 1.077 times the region's diagonal away (1.069–1.084 for the
         // three cars fitted; RUNNING GEAR the same, an F350's running gear from the front within 2–4 pixels of the
         // original's; ENGINE 0.92).
         frameCentre = box.GetCenter();
-        frameLevel = Mathf.Max(1.1f, size * (Region switch { Core.Content.View.Engine => 0.92f, _ => 1.077f }));
+        frameLevel = Mathf.Max(1.1f, size * (framing switch { Core.Content.View.Engine => 0.92f, _ => 1.077f }));
         framed = true;
         Place(animate);
         return true;
@@ -616,6 +632,7 @@ public partial class ShowroomScene : StageScene
     readonly List<(Vector3 Eye, Vector3 Look)> lotViews = [];
     /// <summary>Your parked cars, by bay.</summary>
     readonly List<VehicleView> parked = [];
+    readonly List<int> parkedBays = [];
 
     /// <summary>
     /// How fast the Car Lot's camera glides along the lane while ◄ or ► is held, in bays a second. Measured holding ◄:
@@ -814,16 +831,20 @@ public partial class ShowroomScene : StageScene
     /// The Car Lot: your cars in its bays from the first, in the order the lot keeps them; the camera stays where it
     /// is along the lane, as far as the last car.
     /// </summary>
-    public void ShowLot(IReadOnlyList<string> lot)
+    /// <param name="bayOf">Each car's bay (the lot's order otherwise).</param>
+    public void ShowLot(IReadOnlyList<string> lot, IReadOnlyList<int>? bayOf = null)
     {
         var ids = lot.Where(Game.State.Vehicles.ContainsKey).Take(bays.Count).ToList();
-        if (!parked.Select(v => v.VehicleId).SequenceEqual(ids))
+        var at = ids.Select((_, i) => Math.Clamp(bayOf?.ElementAtOrDefault(i) ?? i, 0, bays.Count - 1)).ToList();
+        if (!parked.Select(v => v.VehicleId).SequenceEqual(ids) || !parkedBays.SequenceEqual(at))
         {
             foreach (var v in parked) v.QueueFree();
             parked.Clear();
+            parkedBays.Clear();
+            parkedBays.AddRange(at);
             for (int i = 0; i < ids.Count; i++)
             {
-                var v = new VehicleView(Game, Assets, ids[i], full: false) { Position = bays[i], Rotation = new Vector3(0, FacingLane(i), 0) };
+                var v = new VehicleView(Game, Assets, ids[i], full: false) { Position = bays[at[i]], Rotation = new Vector3(0, FacingLane(at[i]), 0) };
                 parked.Add(v);
                 AddChild(v);
                 // The original's cars cast a dark rectangle on the lot (measured: the asphalt under it at 0.46); our own
@@ -916,6 +937,8 @@ public partial class ShowroomScene : StageScene
             var at = parked[i].GlobalPosition + Vector3.Up * 0.6f;
             if (Camera.IsPositionBehind(at)) continue;
             var p = Camera.UnprojectPosition(at);
+            // Measured: a car whose middle is out of the view (its end showing at the edge) leaves the figures blank.
+            if (p.X < 0 || p.X > mid * 2) continue;
             if (Mathf.Abs(p.X - mid) < bestD)
             {
                 bestD = Mathf.Abs(p.X - mid);

@@ -1484,6 +1484,20 @@ public partial class App
         return toInstall.Count > 0 ? "could not put back " + string.Join(", ", toInstall) : "";
     }
 
+    /// <summary>Replay: the original's saves brought over as they are, in the order given (the sheet's rows), with no
+    /// questions; then the sign-in sheet.</summary>
+    public void ReplayImport(IEnumerable<string> mekFiles)
+    {
+        foreach (var f in mekFiles)
+        {
+            var m = Core.Original.MekFile.Read(f);
+            var (g, p) = Core.Original.MekImport.Import(Original!, CI, m);
+            foreach (var line in p) GD.Print($"import {m.Name}: {line}");
+            profiles.Add(g.State.Mechanic, g);
+        }
+        ShowSignIn();
+    }
+
     /// <summary>Tour: Job Help (the Job Update box).</summary>
     public Task DemoJobHelp() => JobHelp();
 
