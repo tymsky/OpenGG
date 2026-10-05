@@ -163,6 +163,9 @@ Tags: `M` measured in the running game, `C` confirmed from files or the manual, 
 - `M` A part dropped where an alternative is already on gets Assembly Error, naming the part it would replace. So does
   one dropped before what it goes on is there, or clicked before what is on it is off, naming that part with "is" or
   "are" as its name reads.
+- `M` A part goes on the very part it names, not on an alternative in its place (unless its file allows that, AMEA);
+  what then can't go on is not missing. *Escort: the Cosworth job was done, and the Convertible one ASSEMBLED, with the
+  Trunk and the windshields that go on it (or on the Cab Roof) in the Parts Bin; the refusal is read from the files.*
 - `M` Condition comes in four colours. A black part can only be scrapped: taken off, it does not go back on (Assembly
   Error: too far gone to last; it stays in the Parts Bin).
 - `M` **ASSEMBLED** shows only when nothing is missing, in the worst part's colour (a black one shows red: the tag comes

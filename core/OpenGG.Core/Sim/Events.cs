@@ -1,7 +1,7 @@
 namespace OpenGG.Core.Sim;
 
 /// <summary>Result of a game command. On failure <see cref="Msg"/> is a player-facing sentence.</summary>
-public readonly record struct Result<T>(bool Ok, T? Data = default, string? Msg = null, string Code = "", IReadOnlyList<string>? Slots = null);
+public readonly record struct Result<T>(bool Ok, T? Data = default, string? Msg = null, string Code = "", IReadOnlyList<string>? Slots = null, IReadOnlyList<string>? Names = null);
 
 public static class Result
 {
@@ -9,7 +9,7 @@ public static class Result
     public static Result<Unit> Done(string? msg = null) => new(true, Unit.Value, msg);
     public static Result<T> Fail<T>(string msg, string code = "error", IReadOnlyList<string>? slots = null) => new(false, default, msg, code, slots);
     public static Result<Unit> Fail(string msg, string code = "error", IReadOnlyList<string>? slots = null) => new(false, Unit.Value, msg, code, slots);
-    public static Result<T> From<T>(Check c) => new(false, default, c.Msg, c.Code, c.Slots);
+    public static Result<T> From<T>(Check c) => new(false, default, c.Msg, c.Code, c.Slots, c.Names);
 }
 
 /// <summary>"No data" for <see cref="Result{T}"/>.</summary>

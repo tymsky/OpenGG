@@ -401,16 +401,16 @@ public partial class App : Control
     {
         if (r.Ok) return true;
         Audio.Play("snd.error", 0.5f);
-        var (head, text) = Explain(r.Code, r.Msg ?? "That did not work.", r.Slots, installing);
+        var (head, text) = Explain(r.Code, r.Msg ?? "That did not work.", r.Slots, r.Names, installing);
         QueueDialog(() => dialogs.Alert(head, text));
         return false;
     }
 
     /// <summary>A failed command's title and words; a skin can have its own for those the original has.</summary>
-    (string Head, string Text) Explain(string code, string msg, IReadOnlyList<string>? slots, bool installing)
+    (string Head, string Text) Explain(string code, string msg, IReadOnlyList<string>? slots, IReadOnlyList<string>? names, bool installing)
     {
         var v = Game.WorkshopVehicle();
-        string Names() => v is null || slots is null ? "" : string.Join(", ", slots.Where(id => CI.HasSlot(v.ModelId, id)).Select(id => CI.Slot(v.ModelId, id).Name));
+        string Names() => names is not null ? string.Join(", ", names) : v is null || slots is null ? "" : string.Join(", ", slots.Where(id => CI.HasSlot(v.ModelId, id)).Select(id => CI.Slot(v.ModelId, id).Name));
         string OnIt() => v is not null && slots?.FirstOrDefault() is { } id && v.Slots.GetValueOrDefault(id)?.Part is { } p ? CI.Part(p.PartId).Name : Names();
         // Measured: "until the Front Axle is attached", "until the HotRod Dual Carbs are attached".
         string Is() => slots is { Count: > 1 } || Names().EndsWith('s') ? "are" : "is";

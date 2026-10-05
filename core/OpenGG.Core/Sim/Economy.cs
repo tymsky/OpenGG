@@ -184,9 +184,10 @@ public static class Economy
     {
         double sum = 0;
         int n = 0;
+        var unfillable = VehicleRules.Unfillable(ci, v);
         foreach (var s in ci.Car(v.ModelId).Slots)
         {
-            if (!s.Required) continue;
+            if (!s.Required || unfillable.Contains(s.Id)) continue;
             var st = v.Slots[s.Id];
             sum += st.Part?.Condition ?? 0;
             n++;
@@ -212,11 +213,13 @@ public static class Economy
         // A part off the car, or on it with a bolt out, is missed only where the car needs one (an accessory's empty
         // place stops nothing: measured, a Fairmont without its custom booster started).
         bool Gone(SlotDef s) => v.Slots[s.Id] is var st && (st.Part is null || st.Fasteners.Any(f => !f));
+        // Nor where an alternative has done away with the place (a T-Bird's Carb with the HotRod manifold on).
+        var unfillable = VehicleRules.Unfillable(ci, v);
         // The engine's own troubles are looked for in the engine only (a family is a word in a part's name: the
         // original's "Headlights" would pass for a cylinder head); the exhaust's anywhere.
         bool Broken(List<string> families, int minOk, bool engine = true) =>
             car.Slots.Any(s => families.Contains(s.Family) && (!engine || s.Region == Region.Engine)
-                && (Gone(s) ? s.Required : v.Slots[s.Id].Part!.Condition < minOk));
+                && (Gone(s) ? s.Required && !unfillable.Contains(s.Id) : v.Slots[s.Id].Part!.Condition < minOk));
         bool Damaged(int below, bool block = false) => car.Slots.Any(s => s.Region == Region.Engine && !Gone(s) && v.Slots[s.Id].Part is { } p
             && p.Condition < below && ci.Part(p.PartId).Block == block);
         int hard = d.WorkingCondition;

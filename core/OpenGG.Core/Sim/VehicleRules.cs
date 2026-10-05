@@ -11,11 +11,12 @@ using OpenGG.Core.Content;
 
 namespace OpenGG.Core.Sim;
 
-/// <summary>The answer to "can I do this?". On failure, <see cref="Slots"/> names the parts in the way.</summary>
-public sealed record Check(bool Ok, string Code = "", string Msg = "", IReadOnlyList<string>? Slots = null)
+/// <summary>The answer to "can I do this?". On failure, <see cref="Slots"/> names the parts in the way; <see cref="Names"/>,
+/// when given, names them where the slots would not (a part an alternative stands in for).</summary>
+public sealed record Check(bool Ok, string Code = "", string Msg = "", IReadOnlyList<string>? Slots = null, IReadOnlyList<string>? Names = null)
 {
     public static readonly Check Pass = new(true);
-    public static Check Fail(string code, string msg, IReadOnlyList<string>? slots = null) => new(false, code, msg, slots);
+    public static Check Fail(string code, string msg, IReadOnlyList<string>? slots = null, IReadOnlyList<string>? names = null) => new(false, code, msg, slots, names);
 }
 
 public sealed record Completeness(IReadOnlyList<string> Missing, IReadOnlyList<string> Loose)
@@ -137,6 +138,12 @@ public static class VehicleRules
         if (part.MountsAny && part.Mounts is { Count: > 0 } any && !any.Any(Filled)) missingParents.Add(any[0]);
         if (missingParents.Count > 0)
             return Check.Fail("no_parent", $"Put the {Names(ci, v, missingParents)} on first.", missingParents);
+        var replaced = ReplacedParents(ci, v, slot, part);
+        if (replaced.Count > 0)
+        {
+            var names = replaced.Select(r => ci.Part(r.Part).Name).ToList();
+            return Check.Fail("no_parent", $"Put the {string.Join(", ", names)} on first.", replaced.Select(r => r.Slot).ToList(), names);
+        }
         var blockers = ActiveBlockers(ci, v, slot);
         if (blockers.Count > 0) return Check.Fail("blocked", $"You need to remove the {Names(ci, v, blockers)} first.", blockers);
         return Check.Pass;
@@ -153,17 +160,63 @@ public static class VehicleRules
             .ToList();
     }
 
+    /// <summary>The <see cref="PartDef.NeedsParts"/> of a part that an alternative stands in for on the car, with the slots
+    /// they go in.</summary>
+    static List<(string Slot, string Part)> ReplacedParents(ContentIndex ci, VehicleState v, SlotDef slot, PartDef part)
+    {
+        var list = new List<(string, string)>();
+        if (part.NeedsParts is not { } needs) return list;
+        var under = slot.Parents.Concat(part.Mounts ?? []).ToHashSet();
+        var slots = ci.Car(v.ModelId).Slots;
+        foreach (var id in needs)
+        {
+            var type = ci.Part(id).SlotType;
+            if (slots.Find(s => s.SlotType == type && under.Contains(s.Id)) is { } at && v.Slots[at.Id].Part is { } on && on.PartId != id)
+                list.Add((at.Id, id));
+        }
+        return list;
+    }
+
+    /// <summary>
+    /// Empty stock places the car can't have filled as it is: their part goes on a part an alternative has replaced, or
+    /// on such a place. They are not missing. Measured: the Escort's Cosworth job was done without the Back Windshield
+    /// (it goes on the Trunk, the Hatchback Cosworth in its place), its Convertible job ASSEMBLED without the Trunk and
+    /// either windshield (they go on the Cab Roof).
+    /// </summary>
+    public static HashSet<string> Unfillable(ContentIndex ci, VehicleState v)
+    {
+        var result = new HashSet<string>();
+        var car = ci.Car(v.ModelId);
+        for (bool more = true; more;)
+        {
+            more = false;
+            foreach (var s in car.Slots)
+            {
+                if (s.DefaultPart is not { } d || v.Slots[s.Id].Part is not null || result.Contains(s.Id)) continue;
+                var part = ci.Part(d);
+                bool cut = s.Parents.Concat(part.MountsAny ? [] : part.Mounts ?? []).Any(result.Contains)
+                    || part.MountsAny && part.Mounts is { Count: > 0 } any && any.All(result.Contains)
+                    || ReplacedParents(ci, v, s, part).Count > 0;
+                if (!cut) continue;
+                result.Add(s.Id);
+                more = true;
+            }
+        }
+        return result;
+    }
+
     public static Completeness GetCompleteness(ContentIndex ci, VehicleState v, Region? region = null)
     {
         var missing = new List<string>();
         var loose = new List<string>();
+        HashSet<string>? unfillable = null;
         foreach (var s in ci.Car(v.ModelId).Slots)
         {
             if (region is { } r && s.Region != r) continue;
             var st = v.Slots[s.Id];
             if (st.Part is null)
             {
-                if (s.Required) missing.Add(s.Id);
+                if (s.Required && !(unfillable ??= Unfillable(ci, v)).Contains(s.Id)) missing.Add(s.Id);
                 continue;
             }
             if (st.Fasteners.Any(f => !f)) loose.Add(s.Id);

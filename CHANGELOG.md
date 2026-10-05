@@ -4,6 +4,14 @@ Versions follow [Semantic Versioning](https://semver.org): **MAJOR** when saves 
 working, **MINOR** for new features and changes to how the game plays, **PATCH** for fixes only. While the version is
 0.x (the beta), a MINOR release may still break saves, and its notes say so.
 
+## 0.2.2
+
+A fix for jobs that swap a part for its alternative. Saves of 0.2.1 keep working.
+
+- A part goes only on the very part it is made for, not on an alternative in its place, and a stock part that then
+  can't go on is not missing: the Escort's Cosworth job (Hatchback Cosworth and its Back Windshield) can be finished,
+  and a convertible or chopped top no longer needs the old windshields and trunk.
+
 ## 0.2.1
 
 Fixes found side by side with the original (the same save in both). Saves of 0.2.0 keep working.

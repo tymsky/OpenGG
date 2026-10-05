@@ -13,11 +13,15 @@ public static class Validation
 
         foreach (var dup in pack.Parts.GroupBy(p => p.Id).Where(g => g.Count() > 1)) errors.Add($"duplicate part {dup.Key}");
         foreach (var p in pack.Parts)
+        {
             foreach (var f in p.Fasteners)
             {
                 if (!kindIds.Contains(f.Kind)) errors.Add($"part {p.Id}: unknown fastener kind {f.Kind}");
                 if (!toolKinds.Contains(f.Kind)) errors.Add($"part {p.Id}: no tool handles {f.Kind}");
             }
+            foreach (var n in p.NeedsParts ?? [])
+                if (!partIds.Contains(n)) errors.Add($"part {p.Id}: needs unknown part {n}");
+        }
 
         var skills = pack.Rules.Skills;
         if (skills.Count == 0) errors.Add("rules: no skill levels");

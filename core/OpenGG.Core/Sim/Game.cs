@@ -1499,6 +1499,7 @@ public sealed class Game
         if (State.Job is not { } job) return (false, []);
         var v = Vehicle(job.VehicleId);
         var open = new List<string>();
+        var unfillable = VehicleRules.Unfillable(CI, v);
         foreach (var rq in job.Reqs)
             foreach (var id in rq.SlotIds)
             {
@@ -1509,7 +1510,11 @@ public sealed class Game
                     if (p is not null && (rq.Parts is null || rq.Parts.Contains(p.PartId))) open.Add($"{name}: the customer wants it off");
                     continue;
                 }
-                if (p is null) open.Add($"{name}: missing");
+                if (p is null)
+                {
+                    // A stock place an alternative has done away with is not asked for (Escort #21's Back Windshield).
+                    if (rq.Type != JobReqType.Fix || !unfillable.Contains(id)) open.Add($"{name}: missing");
+                }
                 else if (rq.Parts is not null && !rq.Parts.Contains(p.PartId)) open.Add($"{name}: not the part the customer asked for");
                 else if (p.Condition < rq.MinCondition) open.Add($"{name}: not fixed");
             }

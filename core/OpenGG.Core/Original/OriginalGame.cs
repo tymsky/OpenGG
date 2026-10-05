@@ -210,6 +210,7 @@ public sealed partial class OriginalGame
             foreach (var p in g) slotOfPart[p.Number] = slotId;
             groupSlot.Add((g, slotId));
         }
+        var withAlternatives = groupSlot.Where(g => g.Members.Count > 1).Select(g => g.SlotId).ToHashSet();
 
         var meshNames = info.Meshes.Select(m => m.Name).ToHashSet();
         // The stock car: the parts the file does not mark custom, but only those that go on stock parts. Measured: a part
@@ -255,6 +256,7 @@ public sealed partial class OriginalGame
                     Fasteners = p.Bolts.Select(b => new FastenerDef { Kind = "bolt", Pos = b, Dir = Vec3.Zero }).ToList(),
                     Mounts = Map(p.AttachDep, slotId, stockParts.Contains(p.Number) ? stockSlots : null),
                     MountsAny = p.Amea,
+                    NeedsParts = p.Amea ? null : Exact(p.AttachDep, slotId),
                     RemoveAfter = Map(p.RemoveDep, slotId, null),
                     Sound = info.SoundParts.Contains(p.Number) ? $"orig-sound:{carId}/{p.Number}" : null,
                     SoundKind = p.Special switch { 2 => PartSound.Start, 4 => PartSound.Accessory, _ => PartSound.Run },
@@ -288,6 +290,16 @@ public sealed partial class OriginalGame
         {
             var list = numbers.Where(slotOfPart.ContainsKey).Select(n => slotOfPart[n])
                 .Where(s => s != self && (only is null || only.Contains(s))).Distinct().ToList();
+            return list.Count > 0 ? list : null;
+        }
+
+        // Without AMEA a part goes on the very parts it names, not on an alternative in their place (measured: the
+        // Escort's Cosworth job was done with the Trunk and Back Windshield in the Parts Bin, its Convertible job ASSEMBLED
+        // with the Trunk and both windshields there). Only parents that have alternatives need naming.
+        List<string>? Exact(int[] numbers, string self)
+        {
+            var list = numbers.Where(n => slotOfPart.TryGetValue(n, out var s) && s != self && withAlternatives.Contains(s))
+                .Select(n => PartId(carId, n)).Distinct().ToList();
             return list.Count > 0 ? list : null;
         }
 

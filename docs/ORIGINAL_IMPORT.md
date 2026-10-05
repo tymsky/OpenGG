@@ -37,6 +37,7 @@ own random Free Play jobs.
   +X and right-handed axes, so X is negated and scaled, and rotations become `S R S`. Triangles are turned for Godot's
   clockwise front faces, using the stored normals.
 - **Slots.** Parts sharing a mutual-exclusion bit share a slot (alternatives); the stock part is the default.
+  Without AMEA a part needs the very parts it names, not an alternative in their place (`PartDef.NeedsParts`).
   Accessories (Special = 4) are optional.
 - **Loops.** A few fan-made cars have loops such as "A before B before A", which would make the car impossible to take
   apart: the importer drops the closing link and logs it.

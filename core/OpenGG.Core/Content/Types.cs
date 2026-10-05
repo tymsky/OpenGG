@@ -125,6 +125,10 @@ public sealed class PartDef
     public List<string>? Mounts { get; set; }
     /// <summary>One filled slot of <see cref="Mounts"/> is enough (the original's AMEA parts).</summary>
     public bool MountsAny { get; set; }
+    /// <summary>The very parts this one goes on, where an alternative could take their place: with the alternative on, it
+    /// does not go on (the original's AttachDep without AMEA: an Escort's Back Windshield goes on the Trunk, not on the
+    /// Hatchback Cosworth in its place). Null = any part in the slots it goes on will do.</summary>
+    public List<string>? NeedsParts { get; set; }
     /// <summary>Slots that must be empty before this part can come off (the original's RemoveDep).</summary>
     public List<string>? RemoveAfter { get; set; }
     /// <summary>The part's own sound (asset id), e.g. a starter or a big engine in the original's cars.</summary>

@@ -449,6 +449,51 @@ public class OriginalTests(ITestOutputHelper output)
     }
 
     [OriginalFact]
+    public void APartGoesOnTheVeryPartItNamesNotOnAnAlternative()
+    {
+        // Measured: Escort #21 was done with the Hatchback Cosworth and its own Back Windshield on, the Trunk and the old
+        // Back Windshield in the Parts Bin; #20 was ASSEMBLED with the Convertible on, the Trunk and both windshields in the
+        // Parts Bin (they go on the Cab Roof).
+        var ci = new ContentIndex(Game.Pack);
+        var g = Sim.Game.Create(ci, "Test", 2);
+        string SlotOf(int number) => ci.Car("orig.escort").Slots.First(s => s.SlotType == ci.Part($"orig.escort.{number}").SlotType).Id;
+        string Uid(int number) => g.State.Bin.First(b => b.Part.PartId == $"orig.escort.{number}").Part.Uid;
+        void Off(params int[] numbers)
+        {
+            foreach (var n in numbers) Assert.True(g.RemovePart(SlotOf(n)).Ok, $"remove {n}");
+        }
+        void On(int number, string? uid = null)
+        {
+            var bought = uid is null ? g.BuyPart($"orig.escort.{number}") : default;
+            var r = g.InstallPart(SlotOf(number), uid ?? bought.Data!);
+            Assert.True(r.Ok, $"install {number}: {bought.Msg} {r.Msg}");
+        }
+
+        g.State.Offer = g.MakeScriptedJob(Game.Pack.Jobs.First(j => j.Id == "jpk.escort.21"));
+        g.AcceptJob();
+        Off(110, 105);
+        On(111);
+        var r = g.InstallPart(SlotOf(110), Uid(110));
+        Assert.Equal("no_parent", r.Code);
+        Assert.Equal(["Trunk"], r.Names!);
+        Assert.NotNull(g.State.Job);
+        On(112);
+        Assert.Null(g.State.Job);
+        Assert.Contains("jpk.escort.21", g.State.CompletedJobs);
+
+        g.State.Offer = g.MakeScriptedJob(Game.Pack.Jobs.First(j => j.Id == "jpk.escort.20"));
+        g.AcceptJob();
+        Assert.Equal(["Hatchback Cosworth"], VehicleRules.InstallCheck(ci, g.WorkshopVehicle()!, SlotOf(112), "orig.escort.112").Names!);
+        Off(110, 109, 105, 108);
+        On(114);
+        Assert.NotNull(VehicleRules.AssembledCondition(ci, g.WorkshopVehicle()!));
+        Assert.Equal("no_parent", g.InstallPart(SlotOf(105), Uid(105)).Code);
+        On(115);
+        Assert.Null(g.State.Job);
+        Assert.Contains("jpk.escort.20", g.State.CompletedJobs);
+    }
+
+    [OriginalFact]
     public void PartsThatGoOnCustomPartsAreNotOnTheStockCar()
     {
         // Measured: a T-Bird's HotRod Dual Carbs and Blower (unmarked, on the custom HotRod manifold) and a Fairmont's
